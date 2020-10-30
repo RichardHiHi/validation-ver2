@@ -18,18 +18,12 @@ function Validator(formSelector) {
     },
     min: function (min) {
       return function (value) {
-        value.length >= min ? undefined : `vui lòng nhập hơn ${min} kí tự`;
+        return value.length >= min
+          ? undefined
+          : `vui lòng nhập hơn ${min} kí tự`;
       };
     },
   };
-
-  function vadidate(name, value) {
-    var rules = formRule[name].split("|");
-    rules.forEach(function (rule) {
-      console.log(rule);
-      validatorRules[rule](value);
-    });
-  }
 
   var formElement = document.querySelector(formSelector);
   var inputs = formElement.querySelectorAll("[name][rules]");
@@ -37,13 +31,47 @@ function Validator(formSelector) {
     for (var input of inputs) {
       formRule[input.name] = input.getAttribute("rules");
     }
+
     Array.from(inputs).forEach(function (input) {
-      var errorMessage;
-      input.onblur = function () {
-        errorMessage = vadidate(input.name, input.value);
-      };
-      if (errorMessage) {
-      }
+      var rules = formRule[input.name].split("|");
+      rules.forEach(function (rule) {
+        var funRule;
+        var ruleInfo;
+        isRulerHasValue = rule.includes(":");
+
+        if (isRulerHasValue) {
+          ruleInfo = rule.split(":");
+          rule = ruleInfo[0];
+          console.log(validatorRules[rule]);
+        }
+        funRule = validatorRules[rule];
+        if (isRulerHasValue) {
+          funRule = validatorRules[rule](ruleInfo[1]);
+        }
+
+        if (Array.isArray(formRule[input.name])) {
+          formRule[input.name].push(funRule);
+        } else {
+          formRule[input.name] = [funRule];
+        }
+      });
+      //lang nghe su kien
+      input.onblur = handleValidate;
     });
+    function handleValidate(event) {
+      var funRules = formRule[event.target.name];
+      console.log(funRules);
+      var errormessage;
+
+      for (funRule of funRules) {
+        errormessage = funRule(event.target.value);
+        if (errormessage) {
+          break;
+        }
+      }
+
+      console.log(errormessage);
+    }
+    console.log(formRule);
   }
 }
