@@ -1,6 +1,13 @@
 function Validator(formSelector) {
   var formRule = {};
-
+  function getParent(elment, selector) {
+    while (elment.parentElement) {
+      if (elment.parentElement.matches(selector)) {
+        return elment.parentElement;
+      }
+      elment = elment.parentElement;
+    }
+  }
   /**
    *quy ước tạo rule:
    * - nếu có lỗi thì return `error message`
@@ -42,7 +49,6 @@ function Validator(formSelector) {
         if (isRulerHasValue) {
           ruleInfo = rule.split(":");
           rule = ruleInfo[0];
-          console.log(validatorRules[rule]);
         }
         funRule = validatorRules[rule];
         if (isRulerHasValue) {
@@ -57,21 +63,40 @@ function Validator(formSelector) {
       });
       //lang nghe su kien
       input.onblur = handleValidate;
+      input.oninput = handleClearError;
     });
     function handleValidate(event) {
+      // console.log(getParent(event.target, ".form-group"));
       var funRules = formRule[event.target.name];
-      console.log(funRules);
+
       var errormessage;
 
       for (funRule of funRules) {
+        var parentElement = getParent(event.target, ".form-group");
         errormessage = funRule(event.target.value);
         if (errormessage) {
+          var formMessage = parentElement.querySelector(".form-message");
+          formMessage.innerHTML = errormessage;
+          parentElement.classList.add("invalid");
           break;
         }
       }
-
-      console.log(errormessage);
+      return !errormessage;
     }
-    console.log(formRule);
+    function handleClearError(event) {
+      var parentElement = getParent(event.target, ".form-group");
+      parentElement.classList.remove("invalid");
+      parentElement.querySelector(".form-message").innerHTML = "";
+    }
   }
+  formElement.onsubmit = function (event) {
+    event.preventDefault();
+    var isValid = true;
+    var inputs = formElement.querySelectorAll("[name][rules]");
+    for (input of inputs) {
+      if (!handleValidate({ target: input })) {
+        isValid = false;
+      }
+    }
+  };
 }
